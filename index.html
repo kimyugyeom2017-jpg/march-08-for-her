@@ -1,95 +1,17 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dành cho Kiều</title>
-
-<style>
-body{
-    margin:0;
-    padding:0;
-    background:#0f0f12;
-    overflow:hidden;
-    font-family: Georgia, serif;
-}
-
-canvas{
-    position:fixed;
-    top:0;
-    left:0;
-}
-
-#text{
-    position:absolute;
-    top:50%;
-    left:50%;
-    transform:translate(-50%,-50%);
-    width:88%;
-    max-width:600px;
-
-    text-align:center;
-    color:#f5e6d8;
-
-    font-size:clamp(18px, 4.5vw, 24px);
-    line-height:1.8;
-
-    white-space:pre-line;
-    word-break:keep-all;
-
-    transition:opacity 1.5s ease;
-}
-
-.hand{
-    font-style:italic;
-}
-
-#finalWish{
-    position:absolute;
-    top:50%;
-    left:50%;
-    transform:translate(-50%,-50%);
-    text-align:center;
-
-    font-size:clamp(22px, 6vw, 32px);
-    color:#f5e6d8;
-    letter-spacing:1px;
-
-    opacity:0;
-    transition:opacity 2s ease;
-}
-
-.showWish{
-    opacity:1;
-}
-</style>
-</head>
-
-<body>
-
-<canvas id="dust"></canvas>
-
-<div id="text"></div>
-<div id="finalWish">Chúc chị ngày 08/03 vui vẻ 🌸</div>
-
 <script>
+
 const canvas = document.getElementById("dust");
 const ctx = canvas.getContext("2d");
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-window.onresize = ()=>{
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-}
-
-let particles=[];
-let stage="float";
-let heartScale=1;
-let beatTime=0;
-let index=0;
-let typing=false;
+let particles = [];
+let stage = "float";
+let heartScale = 1;
+let beatTime = 0;
+let index = 0;
+let typing = false;
 
 const scenes=[
 " Có những ngày tháng Ba đến rất khẽ.",
@@ -99,16 +21,17 @@ const scenes=[
 " Và đủ để nhớ về một người."
 ];
 
-function reset(){
-    particles=[];
+// ===== RESET FUNCTION =====
+function resetExperience(){
+    particles = [];
     stage="float";
     heartScale=1;
     beatTime=0;
     index=0;
     typing=false;
 
-    document.getElementById("text").innerHTML="";
     document.getElementById("text").style.opacity="1";
+    document.getElementById("text").innerHTML="";
     document.getElementById("finalWish").classList.remove("showWish");
 
     for(let i=0;i<140;i++){
@@ -120,13 +43,15 @@ function reset(){
     }
 }
 
+// ===== HEART SHAPE =====
 function heartShape(t){
     return {
-        x:16*Math.pow(Math.sin(t),3),
-        y:-(13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t))
+        x: 16*Math.pow(Math.sin(t),3),
+        y: -(13*Math.cos(t) - 5*Math.cos(2*t) - 2*Math.cos(3*t) - Math.cos(4*t))
     };
 }
 
+// ===== DRAW LOOP =====
 function draw(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
     ctx.fillStyle="rgba(255,220,180,0.25)";
@@ -136,6 +61,7 @@ function draw(){
         ctx.moveTo(p.x,p.y);
         ctx.arc(p.x,p.y,p.r,0,Math.PI*2,true);
     }
+
     ctx.fill();
     update();
     requestAnimationFrame(draw);
@@ -145,57 +71,58 @@ function update(){
 
     if(stage==="float"){
         particles.forEach(p=>{
-            p.y-=0.25;
+            p.y -= 0.25;
             if(p.y<0){
-                p.y=canvas.height;
-                p.x=Math.random()*canvas.width;
+                p.y = canvas.height;
+                p.x = Math.random()*canvas.width;
             }
         });
     }
 
     if(stage==="gather"){
-        let cx=canvas.width/2;
-        let cy=canvas.height/2;
+        let cx = canvas.width/2;
+        let cy = canvas.height/2;
 
         particles.forEach((p,i)=>{
-            let t=(i/particles.length)*Math.PI*2;
-            let heart=heartShape(t);
+            let t = (i/particles.length) * Math.PI*2;
+            let heart = heartShape(t);
+            let targetX = cx + heart.x * 9 * heartScale;
+            let targetY = cy + heart.y * 9 * heartScale;
 
-            let tx=cx+heart.x*9*heartScale;
-            let ty=cy+heart.y*9*heartScale;
-
-            p.x+=(tx-p.x)*0.04;
-            p.y+=(ty-p.y)*0.04;
+            p.x += (targetX - p.x) * 0.04;
+            p.y += (targetY - p.y) * 0.04;
         });
     }
 
     if(stage==="beat"){
-        beatTime+=0.04;
-        heartScale=1+Math.sin(beatTime)*0.07;
-        if(beatTime>Math.PI*4){
-            stage="fade";
+        beatTime += 0.04;
+        heartScale = 1 + Math.sin(beatTime) * 0.07;
+
+        if(beatTime > Math.PI * 4){
+            stage = "fade";
         }
     }
 
     if(stage==="fade"){
         particles.forEach(p=>{
-            p.x+=(Math.random()-0.5)*3;
-            p.y+=(Math.random()-0.5)*3;
-            p.r*=0.995;
+            p.x += (Math.random()-0.5)*3;
+            p.y += (Math.random()-0.5)*3;
+            p.r *= 0.995;
         });
     }
 }
 
-function typeWriter(text,el,speed=50,isHand=false){
+// ===== TYPEWRITER =====
+function typeWriter(text, element, speed=50, isHand=false){
     let i=0;
     typing=true;
-    el.innerHTML="";
-    if(isHand) el.classList.add("hand");
-    else el.classList.remove("hand");
+    element.innerHTML="";
+    if(isHand){element.classList.add("hand");}
+    else{element.classList.remove("hand");}
 
     function t(){
         if(i<text.length){
-            el.innerHTML+=text.charAt(i);
+            element.innerHTML+=text.charAt(i);
             i++;
             setTimeout(t,speed);
         }else{
@@ -206,39 +133,40 @@ function typeWriter(text,el,speed=50,isHand=false){
     t();
 }
 
+// ===== FLOW CONTROL =====
 function nextScene(){
+
     if(index<scenes.length){
         typeWriter(scenes[index],document.getElementById("text"));
         index++;
     }
     else if(index===scenes.length){
+
         setTimeout(()=>{
             typeWriter(
             "Với riêng chị — tháng Ba này ấm hơn một chút.",
             document.getElementById("text"),
             60,
-            true
-            );
+            true);
         },1500);
 
         setTimeout(()=>{stage="gather";},6500);
         setTimeout(()=>{stage="beat";},9000);
         setTimeout(()=>{stage="fade";},12500);
         setTimeout(()=>{
-            document.getElementById("text").style.opacity="0";
             document.getElementById("finalWish").classList.add("showWish");
+            document.getElementById("text").style.opacity="0";
         },14000);
 
         index++;
     }
 }
 
-window.onload=function(){
-    reset();
+// ===== AUTO START =====
+window.onload = function(){
+    resetExperience();
     draw();
     setTimeout(nextScene,1000);
 }
-</script>
 
-</body>
-</html>
+</script>
