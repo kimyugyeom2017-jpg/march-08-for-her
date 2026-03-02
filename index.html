@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tháng Ba</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300&family=Dancing+Script:wght@500&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body{
+    background:black;
+    overflow:hidden;
+    color:white;
+    transition:4s ease;
+}
+
+canvas{
+    position:fixed;
+    top:0;
+    left:0;
+}
+
+.container{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    text-align:center;
+    width:80%;
+    max-width:700px;
+}
+
+#text{
+    font-family:'Cormorant Garamond', serif;
+    font-size:30px;
+    line-height:1.6;
+    min-height:120px;
+    opacity:0.9;
+    letter-spacing:1px;
+    transition:opacity 3s ease;
+}
+
+.hand{
+    font-family:'Dancing Script', cursive;
+    font-size:40px;
+}
+
+#finalWish{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%) scale(0.8);
+    font-size:42px;
+    font-family:'Dancing Script', cursive;
+    opacity:0;
+    transition:1.5s ease;
+}
+
+.showWish{
+    opacity:1 !important;
+    transform:translate(-50%,-50%) scale(1);
+}
+
+#hint{
+    position:absolute;
+    bottom:40px;
+    width:100%;
+    text-align:center;
+    font-size:12px;
+    opacity:0.25;
+    letter-spacing:3px;
+    transition:2s;
+}
+</style>
+</head>
+<body onclick="nextScene()">
+
+<canvas id="dust"></canvas>
+
+<div class="container">
+    <div id="text"></div>
+</div>
+
+<div id="finalWish">Chúc chị ngày 08/03 vui vẻ</div>
+
+<div id="hint">chạm nhẹ</div>
+
+<script>
+
+// ===== PARTICLES =====
+const canvas = document.getElementById("dust");
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let particles = [];
+let stage = "float";
+let heartScale = 1;
+
+for(let i=0;i<120;i++){
+    particles.push({
+        angle: Math.random() * Math.PI * 2,
+        radius: Math.random() * 200,
+        x:Math.random()*canvas.width,
+        y:Math.random()*canvas.height,
+        r:Math.random()*1.5
+    });
+}
+
+function heartShape(t){
+    return {
+        x: 16*Math.pow(Math.sin(t),3),
+        y: -(13*Math.cos(t) - 5*Math.cos(2*t) - 2*Math.cos(3*t) - Math.cos(4*t))
+    };
+}
+
+function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle="rgba(255,255,255,0.2)";
+    ctx.beginPath();
+
+    for(let p of particles){
+        ctx.moveTo(p.x,p.y);
+        ctx.arc(p.x,p.y,p.r,0,Math.PI*2,true);
+    }
+
+    ctx.fill();
+    update();
+}
+
+function update(){
+
+    if(stage==="float"){
+        for(let p of particles){
+            p.y -= 0.3;
+            if(p.y<0){
+                p.y = canvas.height;
+                p.x = Math.random()*canvas.width;
+            }
+        }
+    }
+
+    if(stage==="gather"){
+        let centerX = canvas.width/2;
+        let centerY = canvas.height/2;
+
+        particles.forEach((p,i)=>{
+            let t = (i/particles.length) * Math.PI*2;
+            let heart = heartShape(t);
+            let targetX = centerX + heart.x * 10 * heartScale;
+            let targetY = centerY + heart.y * 10 * heartScale;
+
+            p.x += (targetX - p.x) * 0.05;
+            p.y += (targetY - p.y) * 0.05;
+        });
+    }
+
+    if(stage==="beat"){
+        heartScale = 1.2;
+        setTimeout(()=>heartScale=1,300);
+        setTimeout(()=>heartScale=1.2,700);
+        setTimeout(()=>heartScale=1,1000);
+        stage="hold";
+    }
+
+    if(stage==="explode"){
+        particles.forEach(p=>{
+            p.x += (Math.random()-0.5)*20;
+            p.y += (Math.random()-0.5)*20;
+        });
+    }
+}
+
+setInterval(draw,33);
+
+// ===== CONTENT =====
+let index=0;
+let typing=false;
+
+const scenes=[
+" Có những ngày tháng Ba đến rất khẽ.",
+" Nhẹ như ánh sáng trượt qua khung cửa.",
+" Không gọi tên ai.",
+" Chỉ đủ để lòng người dịu xuống.",
+" Và đủ để nhớ về một người."
+];
+
+function softClick(){
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.connect(g);
+    g.connect(ctx.destination);
+    o.frequency.value=600;
+    g.gain.setValueAtTime(0.02, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime+0.3);
+    o.start();
+    o.stop(ctx.currentTime+0.3);
+}
+
+function popSound(){
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.connect(g);
+    g.connect(ctx.destination);
+    o.frequency.value=250;
+    g.gain.setValueAtTime(0.2, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime+0.5);
+    o.start();
+    o.stop(ctx.currentTime+0.5);
+}
+
+function typeWriter(text, element, speed=45, isHand=false){
+    let i=0;
+    typing=true;
+    element.innerHTML="";
+    if(isHand){element.classList.add("hand");}
+    else{element.classList.remove("hand");}
+    function t(){
+        if(i<text.length){
+            element.innerHTML+=text.charAt(i);
+            i++;
+            setTimeout(t,speed);
+        }else{typing=false;}
+    }
+    t();
+}
+
+function nextScene(){
+    if(typing) return;
+
+    if(index<scenes.length){
+        softClick();
+        typeWriter(scenes[index],document.getElementById("text"));
+        index++;
+    }
+    else if(index===scenes.length){
+
+        document.getElementById("hint").style.opacity=0;
+
+        setTimeout(()=>{
+            typeWriter(
+            "Với riêng chị — tháng Ba này ấm hơn một chút.",
+            document.getElementById("text"),
+            60,
+            true);
+        },1500);
+
+        setTimeout(()=>{stage="gather";},6500);
+        setTimeout(()=>{stage="beat";},9000);
+        setTimeout(()=>{stage="explode"; popSound();},11000);
+        setTimeout(()=>{
+            document.getElementById("finalWish").classList.add("showWish");
+            document.getElementById("text").style.opacity="0";
+        },12000);
+
+        index++;
+    }
+}
+</script>
+</body>
+</html>
