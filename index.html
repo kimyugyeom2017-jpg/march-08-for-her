@@ -1,5 +1,6 @@
 <script>
 
+// ===== PARTICLES =====
 const canvas = document.getElementById("dust");
 const ctx = canvas.getContext("2d");
 
@@ -10,40 +11,16 @@ let particles = [];
 let stage = "float";
 let heartScale = 1;
 let beatTime = 0;
-let index = 0;
-let typing = false;
 
-const scenes=[
-" Có những ngày tháng Ba đến rất khẽ.",
-" Nhẹ như ánh sáng trượt qua khung cửa.",
-" Không gọi tên ai.",
-" Chỉ đủ để lòng người dịu xuống.",
-" Và đủ để nhớ về một người."
-];
-
-// ===== RESET FUNCTION =====
-function resetExperience(){
-    particles = [];
-    stage="float";
-    heartScale=1;
-    beatTime=0;
-    index=0;
-    typing=false;
-
-    document.getElementById("text").style.opacity="1";
-    document.getElementById("text").innerHTML="";
-    document.getElementById("finalWish").classList.remove("showWish");
-
-    for(let i=0;i<140;i++){
-        particles.push({
-            x:Math.random()*canvas.width,
-            y:Math.random()*canvas.height,
-            r:Math.random()*1.4
-        });
-    }
+for(let i=0;i<140;i++){
+    particles.push({
+        angle: Math.random() * Math.PI * 2,
+        x:Math.random()*canvas.width,
+        y:Math.random()*canvas.height,
+        r:Math.random()*1.4
+    });
 }
 
-// ===== HEART SHAPE =====
 function heartShape(t){
     return {
         x: 16*Math.pow(Math.sin(t),3),
@@ -51,9 +28,9 @@ function heartShape(t){
     };
 }
 
-// ===== DRAW LOOP =====
 function draw(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
+
     ctx.fillStyle="rgba(255,220,180,0.25)";
     ctx.beginPath();
 
@@ -64,7 +41,6 @@ function draw(){
 
     ctx.fill();
     update();
-    requestAnimationFrame(draw);
 }
 
 function update(){
@@ -95,8 +71,8 @@ function update(){
     }
 
     if(stage==="beat"){
-        beatTime += 0.04;
-        heartScale = 1 + Math.sin(beatTime) * 0.07;
+        beatTime += 0.05;
+        heartScale = 1 + Math.sin(beatTime) * 0.08;
 
         if(beatTime > Math.PI * 4){
             stage = "fade";
@@ -112,35 +88,73 @@ function update(){
     }
 }
 
-// ===== TYPEWRITER =====
-function typeWriter(text, element, speed=50, isHand=false){
+setInterval(draw,33);
+
+// ===== CONTENT =====
+let index=0;
+let typing=false;
+
+const scenes=[
+" Có những ngày tháng Ba đến rất khẽ.",
+" Nhẹ như ánh sáng trượt qua khung cửa.",
+" Không gọi tên ai.",
+" Chỉ đủ để lòng người dịu xuống.",
+" Và đủ để nhớ về một người."
+];
+
+function softClick(){
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.connect(g);
+    g.connect(ctx.destination);
+    o.frequency.value=550;
+    g.gain.setValueAtTime(0.02, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime+0.4);
+    o.start();
+    o.stop(ctx.currentTime+0.4);
+}
+
+function softPop(){
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.connect(g);
+    g.connect(ctx.destination);
+    o.frequency.value=200;
+    g.gain.setValueAtTime(0.15, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime+0.8);
+    o.start();
+    o.stop(ctx.currentTime+0.8);
+}
+
+function typeWriter(text, element, speed=45, isHand=false){
     let i=0;
     typing=true;
     element.innerHTML="";
     if(isHand){element.classList.add("hand");}
     else{element.classList.remove("hand");}
-
     function t(){
         if(i<text.length){
             element.innerHTML+=text.charAt(i);
             i++;
             setTimeout(t,speed);
-        }else{
-            typing=false;
-            setTimeout(nextScene,1500);
-        }
+        }else{typing=false;}
     }
     t();
 }
 
-// ===== FLOW CONTROL =====
 function nextScene(){
+    if(typing) return;
 
     if(index<scenes.length){
+        softClick();
         typeWriter(scenes[index],document.getElementById("text"));
         index++;
     }
     else if(index===scenes.length){
+
+        document.getElementById("hint").style.opacity=0;
 
         setTimeout(()=>{
             typeWriter(
@@ -152,7 +166,7 @@ function nextScene(){
 
         setTimeout(()=>{stage="gather";},6500);
         setTimeout(()=>{stage="beat";},9000);
-        setTimeout(()=>{stage="fade";},12500);
+        setTimeout(()=>{stage="fade"; softPop();},12500);
         setTimeout(()=>{
             document.getElementById("finalWish").classList.add("showWish");
             document.getElementById("text").style.opacity="0";
@@ -161,12 +175,4 @@ function nextScene(){
         index++;
     }
 }
-
-// ===== AUTO START =====
-window.onload = function(){
-    resetExperience();
-    draw();
-    setTimeout(nextScene,1000);
-}
-
 </script>
